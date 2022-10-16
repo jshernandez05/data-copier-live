@@ -1,0 +1,35 @@
+version: '3.5'
+
+services:
+  mysql_db:
+    image: mysql
+    container_name: retail_ms
+    environment:
+      - MYSQL_ROOT_PASSWORD=Changeme
+      - MYSQL_DATABASE=retail_db
+    ports:
+      - "3308:3306"
+    volumes:
+      - ./data/retail_db_csv/:/data/retail_db_csv/
+      - ./configs/mycustom.cnf:/etc/mysql/conf.d/custom.cnf
+      - ./data/create_db_tables_ms.sql:/docker-entrypoint-initdb.d/1_build_schema.sql
+      - ./data/load_db_tables_ms.sql:/docker-entrypoint-initdb.d/2_load_tables.sql
+    networks:
+      - default
+  postgres_db:
+    image: postgres:14.2-alpine
+    container_name: retail_pg
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=Changeme
+    ports:
+      - "5452:5432"
+    volumes:
+      - ./data/create_db_tables_pg.sql:/docker-entrypoint-initdb.d/1_build_schema.sql
+    networks:
+      - default
+  dc-app:
+    build: .
+networks:
+  default:
+    name: dc_af_nw

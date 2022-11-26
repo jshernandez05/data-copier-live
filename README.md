@@ -1,5 +1,7 @@
 # Data Copier
-A simple pipeline to copy data from a database (MySQL) to another database (Postgres).
+A simple data pipline to copy data contained in JSON files to a database (MySQL) and then to another 
+database (Postgres). The goal was to learn to use airflow and docker containers to facilitate ETL/ELT
+processes. 
 
 ## Setup Docker
 
@@ -9,28 +11,14 @@ A simple pipeline to copy data from a database (MySQL) to another database (Post
 
 ## Run Application
 
-* Building Docker Image - `docker build -t data-copier-live .`
-* Running Application using Docker with entrypoint.
-```shell script
-docker run --name data-copier \
-  -v `pwd`:/app \
-  -it \
--e SOURCE_DB_USER=retail_user \
--e SOURCE_DB_PASS=itversity \
--e TARGET_DB_USER=retail_user \
--e TARGET_DB_PASS=itversity \
---entrypoint python \
-data-copier-live app.py dev departments
-```
 
 ## Setup AirFlow
 
-Let us setup AirFlow and develop the pipeline for Data Pipeline.
+Setup AirFlow locally using MySQL database.
 
 #### Using Sqlite
-Let us understand how to setup AirFlow for development using sqlite.
 * AirFlow is Python based Library and hence we can install using `pip`.
-* Let us create virtual environment for AirFlow and then setup AirFlow.
+* Create virtual environment for AirFlow and then setup AirFlow.
 * Create directory by name **airflow** - `mkdir airflow`. Get into the directory by running `cd airflow`.
 * Here is the command to create virtual environment - `python -m venv airflow-env`.
 * Activate the virtual environment - `source airflow-env/bin/activate`
@@ -49,7 +37,7 @@ Here are some of the disadvantages.
 * Useful for development and evaluate AirFlow Features
 #### Using MySQL
 In Non Development environments we have to setup AirFlow using traditional RDBMS Databases.
-Let us understand how we can configure AirFlow with **MySQL Database** and also using **LocalScheduler**.
+Configure AirFlow with **MySQL Database** and also using **LocalScheduler**.
 * Make sure to stop all the airflow processes.
 ```
 cat airflow-scheduler.pid | xargs kill
@@ -61,7 +49,7 @@ ps -ef|grep airflow # if you find any outstanding processes kill using kill comm
 ```
 docker run \
     --name mysql_airflow \
-    -e MYSQL_ROOT_PASSWORD=itversity \
+    -e MYSQL_ROOT_PASSWORD=Changme \
     -d \
     -p 4306:3306 \
     mysql
@@ -69,7 +57,7 @@ docker run \
 * Connect to **MySQL** and create database as well as username for airflow database - `docker exec -it mysql_airflow mysql -u root -p`
 ```
 CREATE DATABASE airflow;
-CREATE USER airflow IDENTIFIED BY 'itversity';
+CREATE USER airflow IDENTIFIED BY 'Changeme';
 GRANT ALL ON airflow.* TO airflow;
 FLUSH PRIVILEGES;
 ```
@@ -80,7 +68,7 @@ executor = SequentialExecutor
 * We can also use other Executors.
 * Update **sql_alchemy_conn** with MySQL URL.
 ```
-sql_alchemy_conn = mysql+mysqlconnector://airflow:itversity@localhost:4306/airflow?use_pure=True
+sql_alchemy_conn = mysql+mysqlconnector://airflow:Changeme@localhost:4306/airflow?use_pure=True
 ```
 * Make sure some of the properties related to concurrency is adjusted to lower numbers.
 ```shell script
@@ -117,7 +105,4 @@ ps -ef|grep airflow #Kill any remaining sessions
 airflow webserver -p 8080 -D
 airflow scheduler -D
 ```
-## Schedule using AirFlow
-By this time we should be ready with our application as well as AirFlow. Let us understand how we can integrate both.
-* As we are going to run our applicatio using Docker Container, we will use DockerOperator provided by AirFlow.
-* Add Docker to AirFlow - `pip install apache-airflow['docker']`
+
